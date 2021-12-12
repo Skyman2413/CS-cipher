@@ -42,38 +42,56 @@ class CSCipher:
         encrypted = ''
         self.generate_subkeys()
         for i in range(0, len(file), 16):
-            m0 = file[i:i + 16]
-            m0 = self.fill_to_full(m0, 16)
-            print(m0)
-            m05 = self.fill_to_full(hex(int(self.subkeys[2], 16) ^ int(m0, 16)).replace('0x', ''), 16)
-            m1 = hex(int(self.subkeys[3], 16) ^ int(self.E(m05), 16)).replace('0x', '')
-            m1 = self.fill_to_full(m1, 16)
-            print(m1)
-            m2 = hex(int(self.subkeys[4], 16) ^ int(self.E(m1), 16)).replace('0x', '')
-            m2 = self.fill_to_full(m2, 16)
-            print(m2)
-            m3 = hex(int(self.subkeys[5], 16) ^ int(self.E(m2), 16)).replace('0x', '')
-            m3 = self.fill_to_full(m3, 16)
-            print(m3)
-            m4 = hex(int(self.subkeys[6], 16) ^ int(self.E(m3), 16)).replace('0x', '')
-            m4 = self.fill_to_full(m4, 16)
-            print(m4)
-            m5 = hex(int(self.subkeys[7], 16) ^ int(self.E(m4), 16)).replace('0x', '')
-            m5 = self.fill_to_full(m5, 16)
-            print(m5)
-            m6 = hex(int(self.subkeys[8], 16) ^ int(self.E(m5), 16)).replace('0x', '')
-            m6 = self.fill_to_full(m6, 16)
-            print(m6)
-            m7 = hex(int(self.subkeys[9], 16) ^ int(self.E(m6), 16)).replace('0x', '')
-            m7 = self.fill_to_full(m7, 16)
-            print(m7)
-            m8 = hex(int(self.E(m7), 16) ^ int(self.subkeys[10], 16)).replace('0x', '')
-            m8 = self.fill_to_full(m8, 16)
-            print(m8)
-            encrypted += m8
+            block = file[i:i + 16]
+            block = self.fill_to_full(block, 16)
+            for j in range(8):
+                block = hex(int(block, 16) ^ int(self.subkeys[j + 2], 16)).replace('0x', '')
+                block = self.fill_to_full(block, 16)
+                block = self.E(block)
+            block = hex(int(block, 16) ^ int(self.subkeys[10], 16)).replace('0x', '')
+            encrypted += block
         self.crypto_file = encrypted
         return encrypted
 
+    def phi(self, x):
+        x = bin(int(x, 16)).replace('0b', '')
+        x = self.fill_to_full(x, 8)
+        res = (int(self.shift(x, -1), 2) & 0x55) ^ int(x, 2)
+        return self.fill_to_full(hex(res).replace('0x', ''), 2)
+
+    def M(self, x):
+        xl = x[0:2]
+        xr = x[2:4]
+        a = hex(int(self.phi(xl), 16) ^ int(xr, 16)).replace('0x', '')
+        a = self.fill_to_full(a, 2)
+        yl = self.P(a)
+        yl = self.fill_to_full(yl, 2)
+        xl = self.fill_to_full(bin(int(x[0:2], 16)).replace('0b', ''), 8)
+        b = self.shift(xl, -1)
+        b = hex(int(b, 2) ^ int(xr, 16)).replace('0x', '')
+        b = self.fill_to_full(b, 2)
+        yr = self.P(b)
+        return yl + yr
+
+    def E(self, x):
+        t = ''
+        for i in range(0, 16, 4):
+            t += self.M(x[i:i + 4])
+        t = t[0:2] + t[4:6] + t[8:10] + t[12:14] + t[2:4] + t[6:8] + t[10:12] + t[14:16]
+        t = hex(int(t, 16) ^ self.c).replace('0x', '')
+        t = self.fill_to_full(t, 16)
+        t1 = ''
+        for i in range(0, 16, 4):
+            t1 += self.M(t[i:i + 4])
+        t1 = t1[0:2] + t1[4:6] + t1[8:10] + t1[12:14] + t1[2:4] + t1[6:8] + t1[10:12] + t1[14:16]
+        t1 = hex(int(t1, 16) ^ self.cc).replace('0x', '')
+        t1 = self.fill_to_full(t1, 16)
+        t2 = ''
+        for i in range(0, 16, 4):
+            t2 += self.M(t1[i:i + 4])
+        t2 = t2[0:2] + t2[4:6] + t2[8:10] + t2[12:14] + t2[2:4] + t2[6:8] + t2[10:12] + t2[14:16]
+
+        return t2
 
     def decrypt(self):
         file = self.crypto_file
@@ -91,60 +109,21 @@ class CSCipher:
             decrypted += block
         return decrypted
 
-    def phi(self, x):
-        x = bin(int(x, 16)).replace('0b', '')
-        res = (int(self.shift(x, -1), 2) & 0x55) ^ int(x, 2)
-        return self.fill_to_full(hex(res).replace('0x', ''), 2)
-
     def phi_rev(self, x):
         x = bin(int(x, 16)).replace('0b', '')
         x = self.fill_to_full(x, 8)
         res = (int(self.shift(x, -1), 2) & 0xaa) ^ int(x, 2)
         return self.fill_to_full(hex(res).replace('0x', ''), 2)
 
-    def M(self, x):
-        xl = self.fill_to_full(bin(int(x[0:2], 16)).replace('0b', ''), 8)
-        xr = x[2:4]
-        a = hex(int(self.phi(xl), 2) ^ int(xr, 16)).replace('0x', '')
-        a = self.fill_to_full(a, 2)
-        yl = self.P(a)
-
-        b = self.shift(xl, -1)
-        b = hex(int(b, 16) ^ int(xr, 16)).replace('0x', '')
-        b = self.fill_to_full(b, 2)
-        yr = self.P(b)
-        return yl + yr
-
     def M_rev(self, y):
         yl = y[0:2]
         yr = y[2:4]
-        a = hex(int(self.P(yl), 16) ^ int(self.P(yr),16)).replace('0x', '')
+        a = hex(int(self.P(yl), 16) ^ int(self.P(yr), 16)).replace('0x', '')
         a = self.fill_to_full(a, 2)
-        xl = self.phi_rev(a)
-        xr = self.fill_to_full(hex(int(self.shift(xl, -1), 16) ^ int(self.P(yr),16)).replace('0x', ''), 2)
+        xl = self.fill_to_full(bin(int(self.phi_rev(a), 16)).replace('0b', ''), 8)
+        xr = self.fill_to_full(hex(int(self.shift(xl, -1), 2) ^ int(self.P(yr), 16)).replace('0x', ''), 2)
+        xl = self.fill_to_full(hex(int(xl, 2)).replace('0x', ''), 2)
         return xl + xr
-
-    def E(self, x):
-        t = ''
-        for i in range(0, 16, 4):
-            t += self.M(x[i:i+4])
-        t = t[0:2] + t[4:6] + t[8:10] + t[12:14] + t[2:4] + t[6:8] + t[10:12] + t[14:16]
-        print(t)
-        t = hex(int(t, 16) ^ self.c).replace('0x', '')
-        t = self.fill_to_full(t, 16)
-        t1 = ''
-        for i in range(0, 16, 4):
-            t1 += self.M(t[i:i+4])
-        t1 = t1[0:2] + t1[4:6] + t1[8:10] + t1[12:14] + t1[2:4] + t1[6:8] + t1[10:12] + t1[14:16]
-        print(t1)
-        t1 = hex(int(t1, 16) ^ self.cc).replace('0x', '')
-        t1 = self.fill_to_full(t1, 16)
-        t2 = ''
-        for i in range(0, 16, 4):
-            t2 += self.M(t1[i:i+4])
-        t2 = t2[0:2] + t2[4:6] + t2[8:10] + t2[12:14] + t2[2:4] + t2[6:8] + t2[10:12] + t2[14:16]
-
-        return t2
 
     def E_rev(self, x):
         t = x[0:2] + x[8:10] + x[2:4] + x[10:12] + x[4:6] + x[12:14] + x[6:8] + x[14:16]
@@ -153,16 +132,16 @@ class CSCipher:
             t1 += self.M_rev(t[i:i + 4])
 
         t1 = hex(int(t1, 16) ^ self.cc).replace('0x', '')
-        t1 = t1[0:2] + t1[8:10] + t1[2:4] + t1[10:12] + t1[4:6] + t1[12:14] + t1[6:8] + t1[14:16]
         t1 = self.fill_to_full(t1, 16)
+        t1 = t1[0:2] + t1[8:10] + t1[2:4] + t1[10:12] + t1[4:6] + t1[12:14] + t1[6:8] + t1[14:16]
         t2 = ''
 
         for i in range(0, 16, 4):
             t2 += self.M_rev(t1[i:i + 4])
 
         t2 = hex(int(t2, 16) ^ self.c).replace('0x', '')
-        t2 = t2[0:2] + t2[8:10] + t2[2:4] + t2[10:12] + t2[4:6] + t2[12:14] + t2[6:8] + t2[14:16]
         t2 = self.fill_to_full(t2, 16)
+        t2 = t2[0:2] + t2[8:10] + t2[2:4] + t2[10:12] + t2[4:6] + t2[12:14] + t2[6:8] + t2[14:16]
         t3 = ''
         for i in range(0, 16, 4):
             t3 += self.M_rev(t2[i:i + 4])
@@ -173,7 +152,7 @@ class CSCipher:
         self.subkeys.append(self.key[int(self.key_length / 2):self.key_length])
         self.subkeys.append(self.key[0:int(self.key_length / 2)])
         for i in range(2, 11):
-            a = hex(self.ci[i-2])
+            a = hex(self.ci[i - 2])
             xor = int(self.subkeys[i - 1], 16) ^ self.ci[i - 2]
             xor = hex(xor).replace('0x', '')
             xor = self.fill_to_full(xor, 16)
@@ -200,7 +179,6 @@ class CSCipher:
         for symb in lst_res:
             res += symb
         return res
-
 
     def P(self, x) -> str:
         xl = int(x[0], 16)
