@@ -43,7 +43,6 @@ class CSCipher:
         self.generate_subkeys()
         for i in range(0, len(file), 16):
             block = file[i:i + 16]
-            block = self.fill_to_full(block, 16)
             for j in range(8):
                 block = hex(int(block, 16) ^ int(self.subkeys[j + 2], 16)).replace('0x', '')
                 block = self.fill_to_full(block, 16)
@@ -99,7 +98,6 @@ class CSCipher:
         decrypted = ''
         for i in range(0, len(file), 16):
             block = file[i:i + 16]
-            block = self.fill_to_full(block, 16)
             for j in range(10, 2, -1):
                 block = hex(int(block, 16) ^ int(self.subkeys[j], 16)).replace('0x', '')
                 block = self.fill_to_full(block, 16)
@@ -212,9 +210,12 @@ class CSCipher:
 
 
 if __name__ == '__main__':
-    key = '0123456789abcdeffedcba9876543210'
-    text = ''
-    b1 = '0123456789abcdef'
+    key = None
+    text = 'test value'
+    b1 = text.encode().hex()
+    while len(b1) % 16 != 0:
+        text = text + ' '
+        b1 = text.encode().hex()
     cs = CSCipher(b1, False, key)
 
     a = cs.encrypt()
@@ -224,3 +225,4 @@ if __name__ == '__main__':
     print(b1)
     print(a)
     print(b)
+    print(bytes.fromhex(b1).decode())
