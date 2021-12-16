@@ -9,6 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 
 
 class Ui_About(object):
@@ -34,6 +35,7 @@ class Ui_About(object):
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     About = QtWidgets.QDialog()
     ui = Ui_About()

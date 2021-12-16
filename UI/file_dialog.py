@@ -9,7 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QDialog
 
 from CSCipher import CSCipher
 
@@ -19,12 +19,10 @@ class Ui_FileDialog(object):
     inputFile: str or None
     keyFile: str or None
 
-    def __init__(self):
+    def setupUi(self, FileDialog):
         self.outputFile = None
         self.inputFile = None
         self.keyFile = None
-
-    def setupUi(self, FileDialog):
         FileDialog.setObjectName("FileDialog")
         FileDialog.resize(369, 180)
         self.inputFileButton = QtWidgets.QPushButton(FileDialog)
@@ -59,38 +57,6 @@ class Ui_FileDialog(object):
         self.startButton.setText(_translate("FileDialog", "Начать"))
         self.generateBox.setText(_translate("FileDialog", "Сгенерировать ключ"))
         self.encryptBox.setText(_translate("FileDialog", "Зашифровать"))
-        self.encryptBox.stateChanged.connect(self.onCheckedGenerate)
-        self.inputFileButton.clicked.connect(self.onInputClick)
-        self.keyFileButton.clicked.connect(self.onKeyClick)
-        self.outputFileButton.clicked.connect(self.onOutputClick)
-        self.startButton.clicked.connect(self.onStartClick)
-
-    def onInputClick(self):
-        self.inputFile = QtWidgets.QFileDialog.getOpenFileName(filter='*.txt')[0]
-
-    def onKeyClick(self):
-        self.keyFile = QtWidgets.QFileDialog.getOpenFileName(filter='*.txt')[0]
-
-    def onOutputClick(self):
-        self.outputFile = QtWidgets.QFileDialog.getOpenFileName(filter='*.txt')[0]
-
-    def onStartClick(self):
-        encrypt = self.encryptBox.isChecked()
-        if self.outputFile is None:
-            self.outputFile = 'output.txt'
-        cs = CSCipher(self.inputFile, self.keyFile, self.outputFile,not encrypt)
-        cs.start()
-        QMessageBox.about(FileDialog, "", "Готово")
-        self.outputFile = None
-        self.keyFile = None
-        self.inputFile = None
-
-    def onCheckedGenerate(self):
-        if self.encryptBox.isChecked():
-            self.generateBox.setEnabled(True)
-        else:
-            self.generateBox.setChecked(False)
-            self.generateBox.setEnabled(False)
 
 
 if __name__ == "__main__":

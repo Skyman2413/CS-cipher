@@ -9,9 +9,14 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMainWindow
+
+from UI.about_dialog import Ui_About
+from UI.file_dialog import Ui_FileDialog
 
 
 class Ui_MainWindow(object):
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(363, 189)
@@ -31,17 +36,8 @@ class Ui_MainWindow(object):
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-        self.fileButton.clicked.connect(self.on_click_file)
-        self.infoButton.clicked.connect(self.on_click_info)
-
-    def on_click_file(self):
-        pass
-
-    def on_click_info(self):
-        pass
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -49,9 +45,10 @@ class Ui_MainWindow(object):
         self.fileButton.setText(_translate("MainWindow", "Файл"))
         self.infoButton.setText(_translate("MainWindow", "Справка"))
 
-    def
+
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()

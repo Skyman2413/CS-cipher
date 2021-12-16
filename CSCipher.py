@@ -35,7 +35,7 @@ class CSCipher:
         check = True
         while check:
             if not self.decrypt_mode:
-                if self.key is None:
+                if self.key is None or self.key == '' or self.key == ' ':
                     self.key = self.generate_key()
                     if self.key_file is None:
                         self.key_file = 'key.txt'
