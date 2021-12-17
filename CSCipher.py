@@ -24,7 +24,7 @@ class CSCipher:
     Fx = [0xf, 0xd, 0xb, 0xb, 0x7, 0x5, 0x7, 0x7, 0xe, 0xd, 0xa, 0xb, 0xe, 0xd, 0xe, 0xf]
     Gx = [0xa, 0x6, 0x0, 0x2, 0xb, 0xe, 0x1, 0x8, 0xd, 0x4, 0x5, 0x3, 0xf, 0xc, 0x7, 0x9]
 
-    def __init__(self, input_file: str, key_file: str, output_file: str, decrypt: bool, key=None):
+    def __init__(self, input_file: str, key_file: str or None, output_file: str, decrypt: bool, key=None):
         self.key = key
         self.key_file = key_file
         self.decrypt_mode = decrypt
@@ -35,10 +35,9 @@ class CSCipher:
         check = True
         while check:
             if not self.decrypt_mode:
-                if self.key is None or self.key == '' or self.key == ' ':
+                if self.key_file is None or self.key_file == '' or self.key_file == ' ':
                     self.key = self.generate_key()
-                    if self.key_file is None:
-                        self.key_file = 'key.txt'
+                    self.key_file = 'key.txt'
                     with open(self.key_file, 'w') as f:
                         f.write(self.key)
 
@@ -46,21 +45,34 @@ class CSCipher:
                 self.key = f.read()
             self.generate_subkeys()
             check = False
-            with open(self.input_file, 'r') as f:
-                text = f.read()
-            byt = text.encode('windows-1251').hex()
-            while len(byt) % 16 != 0:
-                text = text + ' '
-                byt = text.encode('windows-1251').hex()
-
+            if self.decrypt_mode:
+                with open(self.input_file, 'rb') as f:
+                    text = f.read()
+                byt = text.hex()
+                while len(byt) % 16 != 0:
+                    byt = '0' + byt
+            else:
+                with open(self.input_file, 'r') as f:
+                    text = f.read()
+                byt = text.encode().hex()
+                while len(byt) % 16 != 0:
+                    text += ' '
+                    byt = text.encode().hex()
             if self.decrypt_mode:
                 output = self.decrypt(byt)
             else:
                 output = self.encrypt(byt)
             try:
-                with open(self.output_file, 'w') as f:
-                    f.write(bytes.fromhex(output).decode('windows-1251'))
-            except:
+                if self.decrypt_mode:
+                    with open(self.output_file, 'w') as f:
+                        a = bytes.fromhex(output).decode()
+                        f.write(a)
+                else:
+                    with open(self.output_file, 'wb') as f:
+                        a = bytes.fromhex(output)
+                        f.write(a)
+            except Exception as e:
+                print(e)
                 check = True
                 self.key = None
 
@@ -72,7 +84,7 @@ class CSCipher:
                 block = hex(int(block, 16) ^ int(self.subkeys[j + 2], 16)).replace('0x', '')
                 block = self.fill_to_full(block, 16)
                 block = self.E(block)
-            block = hex(int(block, 16) ^ int(self.subkeys[10], 16)).replace('0x', '')
+            block = self.fill_to_full(hex(int(block, 16) ^ int(self.subkeys[10], 16)).replace('0x', ''), 16)
             encrypted += block
         self.crypto_file = encrypted
         return encrypted
@@ -230,3 +242,4 @@ class CSCipher:
                 ind = i + j * 8
                 res += x[ind]
         return self.fill_to_full(hex(int(res, 2)).replace('0x', '0'), 16)
+

@@ -62,20 +62,22 @@ class FileDialog(QtWidgets.QDialog, Ui_FileDialog):
         self.startButton.clicked.connect(self.onStartClick)
 
     def onInputClick(self):
-        self.inputFile = QtWidgets.QFileDialog.getOpenFileName(filter='*.txt')[0]
+        self.inputFile = QtWidgets.QFileDialog.getOpenFileName()[0]
 
     def onKeyClick(self):
         self.keyFile = QtWidgets.QFileDialog.getOpenFileName(filter='*.txt')[0]
 
     def onOutputClick(self):
-        self.outputFile = QtWidgets.QFileDialog.getOpenFileName(filter='*.txt')[0]
+        self.outputFile = QtWidgets.QFileDialog.getOpenFileName()[0]
 
     def onStartClick(self):
         encrypt = self.encryptBox.isChecked()
         if self.inputFile is None or self.inputFile == '' or self.inputFile == ' ':
             QMessageBox.about(self.FileDialog, "", "Вы забыли выбрать входной файл")
         if self.outputFile is None or self.outputFile == '' or self.outputFile == ' ':
-            self.outputFile = 'output.txt'
+            self.outputFile = 'output'
+        if self.generateBox.isChecked():
+            self.keyFile = None
         cs = CSCipher(self.inputFile, self.keyFile, self.outputFile, not encrypt)
         cs.start()
         QMessageBox.about(self.FileDialog, "", "Готово")
