@@ -74,6 +74,7 @@ class FileDialog(QtWidgets.QDialog, Ui_FileDialog):
         encrypt = self.encryptBox.isChecked()
         if self.inputFile is None or self.inputFile == '' or self.inputFile == ' ':
             QMessageBox.about(self.FileDialog, "", "Вы забыли выбрать входной файл")
+            return 
         if self.outputFile is None or self.outputFile == '' or self.outputFile == ' ':
             self.outputFile = 'output.txt'
         if self.generateBox.isChecked():

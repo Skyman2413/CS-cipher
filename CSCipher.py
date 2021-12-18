@@ -43,6 +43,10 @@ class CSCipher:
 
             with open(self.key_file, 'r') as f:
                 self.key = f.read()
+            if len(self.key) > 32:
+                self.key = self.key[0:32]
+            else:
+                self.key = self.fill_to_full(self.key, 32)
             self.generate_subkeys()
             check = False
             if self.decrypt_mode:
@@ -65,7 +69,8 @@ class CSCipher:
             try:
                 if self.decrypt_mode:
                     with open(self.output_file, 'w') as f:
-                        a = bytes.fromhex(output).decode()
+                        a = bytes.fromhex(output)
+                        a = a.decode()
                         f.write(a)
                 else:
                     with open(self.output_file, 'wb') as f:
